@@ -6,13 +6,18 @@ An introduction to machine learning through simple linear regression.
 
 1. [What is Linear Regression?](#what-is-linear-regression)
 2. [Key Definitions](#key-definitions)
+   - Theta0, Theta1, Cost (MSE), Convergence
 3. [The Math Behind It](#the-math-behind-it)
+   - The Calculus: Where the formulas come from
+   - Theta vs Gradient
+   - How Learning Rate affects Step Size
 4. [Gradient Descent Explained](#gradient-descent-explained)
 5. [Choosing Learning Rate and Iterations](#choosing-learning-rate-and-iterations)
 6. [Why Normalization?](#why-normalization)
 7. [Project Overview](#project-overview)
 8. [Installation](#installation)
 9. [Usage](#usage)
+   - Includes: plot_convergence.py detailed explanation
 
 ---
 
@@ -300,7 +305,90 @@ tmpθ₀ = learningRate × (1/m) × Σ(estimatePrice(mileage[i]) - price[i])
 tmpθ₁ = learningRate × (1/m) × Σ(estimatePrice(mileage[i]) - price[i]) × mileage[i]
 ```
 
-**This looks scary! Let's break it down piece by piece:**
+### Where Do These Formulas Come From? (The Calculus)
+
+These formulas come from **calculus** - specifically, taking the **partial derivatives** of the cost function.
+
+**The Cost Function:**
+```
+J(θ₀, θ₁) = (1/2m) × Σ(θ₀ + θ₁×x - y)²
+```
+
+Where:
+- J = the cost (what we want to minimize)
+- θ₀, θ₁ = our parameters
+- x = mileage
+- y = actual price
+
+**Taking Partial Derivatives:**
+
+To find the minimum of the cost function, we take the derivative with respect to each parameter:
+
+```
+∂J/∂θ₀ = (1/m) × Σ(θ₀ + θ₁×x - y)
+       = (1/m) × Σ(prediction - actual)
+       = (1/m) × Σ(error)
+
+∂J/∂θ₁ = (1/m) × Σ(θ₀ + θ₁×x - y) × x
+       = (1/m) × Σ(error) × x
+```
+
+**These partial derivatives ARE the gradients!**
+
+**The Gradient Vector:**
+```
+∇J = [ ∂J/∂θ₀ ]  =  [ (1/m) × Σ(error)     ]
+     [ ∂J/∂θ₁ ]     [ (1/m) × Σ(error × x) ]
+```
+
+The gradient points in the direction of **steepest increase** of the cost. We want to **decrease** the cost, so we go the **opposite direction** (subtract).
+
+### Theta vs Gradient - Don't Confuse Them!
+
+| Term | What It Is | Role |
+|------|------------|------|
+| θ₀, θ₁ | Parameters | The values we're trying to find |
+| ∂J/∂θ₀, ∂J/∂θ₁ | Gradients | Direction to adjust parameters |
+| tmpθ₀, tmpθ₁ | Gradient × learning rate | Actual step size |
+
+**Analogy:**
+- **θ (theta)** = your position on a hill
+- **Gradient** = which direction is uphill
+- **-Gradient** = which direction is downhill (where we want to go)
+- **Learning rate × Gradient** = how big of a step to take
+
+### How Learning Rate Affects Step Size
+
+The learning rate **multiplies** the gradient to determine step size:
+
+```
+tmpθ₀ = learningRate × gradient
+tmpθ₀ = learningRate × (1/m) × Σ(error)
+```
+
+**Example with gradient = 0.5:**
+
+| Learning Rate | Calculation | Step Size | Effect |
+|---------------|-------------|-----------|--------|
+| 0.1 | 0.1 × 0.5 | 0.05 | Small step (slow, safe) |
+| 0.5 | 0.5 × 0.5 | 0.25 | Medium step |
+| 1.0 | 1.0 × 0.5 | 0.50 | Large step (fast) |
+| 2.0 | 2.0 × 0.5 | 1.00 | Too large (overshoots!) |
+
+**Key insight:** Bigger learning rate = bigger steps
+
+```
+Small lr (0.1):     *....*....*....*....* (many small steps)
+
+Large lr (1.0):     *____*____*           (few big steps)
+
+Too large lr (2.0): *         *         * (overshoots, bounces)
+                         ←→       ←→
+```
+
+### Breaking Down the Formula Piece by Piece
+
+**This looks scary! Let's break it down:**
 
 #### Part 1: The Error
 
