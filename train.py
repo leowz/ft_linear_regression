@@ -6,8 +6,8 @@ Trains a linear regression model using gradient descent algorithm.
 
 DATA_FILE = "data.csv"
 THETA_FILE = "theta.csv"
-LEARNING_RATE = 0.1
-ITERATIONS = 1000
+LEARNING_RATE = 1
+ITERATIONS = 500
 
 
 def load_data(filename):
