@@ -1,0 +1,15 @@
+.claude
+__py*
+*.pyc
+*.csv
+*.json
+*.txt
+*.log
+*.log.*
+*.log.*.*
+*.log.*.*.*
+*.log.*.*.*.*
+*.log.*.*.*.*.*
+*.log.*.*.*.*.*.*
+theta.csv
+data.csv
