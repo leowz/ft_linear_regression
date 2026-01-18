@@ -3,12 +3,5 @@ __py*
 *.pyc
 *.csv
 *.json
-*.log
-*.log.*
-*.log.*.*
-*.log.*.*.*
-*.log.*.*.*.*
-*.log.*.*.*.*.*
-*.log.*.*.*.*.*.*
 theta.csv
 data.csv
