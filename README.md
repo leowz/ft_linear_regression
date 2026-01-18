@@ -549,6 +549,111 @@ Gradient descent starts somewhere on the edge and rolls down to the bottom:
               *  <- End here (converged)
 ```
 
+### Why Do We Subtract? (The Math Behind the Minus Sign)
+
+In the update rule, we **subtract** the gradient:
+
+```
+θ = θ - learning_rate × gradient
+```
+
+**Why minus and not plus?** This comes from calculus and optimization theory.
+
+#### The Gradient Points Uphill
+
+From calculus, there's a theorem:
+
+```
+∇J(θ) = direction of steepest INCREASE of J at point θ
+```
+
+The gradient always points toward where the function **increases** the most.
+
+**Visual:**
+```
+Cost J(θ)
+    ^
+    |        * ← you are here
+    |       /|
+    |      / |
+    |     /  ↑ gradient points UP (toward higher cost)
+    |    /   |
+    |   /
+    +--+--------→ θ
+```
+
+#### To Minimize, Go Opposite
+
+Since gradient points **uphill** (increasing cost), to **minimize** cost we must go **downhill** (opposite direction):
+
+```
+-∇J(θ) = direction of steepest DECREASE of J
+```
+
+Therefore, the update rule is:
+```
+θ_new = θ_old - α × ∇J(θ)
+        ↑
+        minus sign = go opposite of gradient = go downhill
+```
+
+#### Mathematical Proof (Taylor Series)
+
+For those who want the rigorous derivation:
+
+We want to find direction `d` that decreases J(θ) the most.
+
+**Step 1:** Taylor series expansion:
+```
+J(θ + d) ≈ J(θ) + ∇J(θ)ᵀ × d
+```
+
+**Step 2:** To minimize J(θ + d), we need `∇J(θ)ᵀ × d` to be as **negative** as possible.
+
+**Step 3:** The dot product `∇J(θ)ᵀ × d` is most negative when `d` points in the **opposite** direction of `∇J(θ)`:
+```
+d = -α × ∇J(θ)    (where α > 0)
+```
+
+**Step 4:** Therefore:
+```
+θ_new = θ_old + d = θ_old - α × ∇J(θ)
+```
+
+The minus sign is mathematically derived, not arbitrary!
+
+#### Practical Example
+
+```
+Case 1: Gradient is positive (+0.5)
+   - Means: "increasing θ will increase cost"
+   - To decrease cost → decrease θ
+   - θ = θ - (+0.5) = θ - 0.5 ✓ (θ decreases)
+
+Case 2: Gradient is negative (-0.5)
+   - Means: "increasing θ will decrease cost"
+   - To decrease cost → increase θ
+   - θ = θ - (-0.5) = θ + 0.5 ✓ (θ increases)
+```
+
+The minus sign automatically handles both cases correctly!
+
+#### Summary: Why Subtract?
+
+| Concept | Explanation |
+|---------|-------------|
+| Gradient direction | Points toward steepest **increase** |
+| Our goal | **Minimize** cost (decrease it) |
+| Solution | Go **opposite** of gradient |
+| Math operation | **Subtract** the gradient |
+| Name origin | "Gradient **Descent**" = descending by subtracting gradient |
+
+```python
+# This is why the code uses minus:
+theta0 -= tmp_theta0  # equivalent to: theta0 = theta0 - tmp_theta0
+theta1 -= tmp_theta1  # equivalent to: theta1 = theta1 - tmp_theta1
+```
+
 ### Step-by-Step Example
 
 Let's trace through the first few iterations:
