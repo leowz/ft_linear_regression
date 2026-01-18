@@ -729,16 +729,51 @@ Even with a tiny learning rate of 0.00000001:
 
 An adjustment of 10 per iteration is WAY too big. The values will bounce around wildly and never settle. This is called **divergence**.
 
-**What happens:**
+**Real example - what actually happens without normalization:**
+
 ```
-Iteration 1: theta1 = 0
-Iteration 2: theta1 = 10
-Iteration 3: theta1 = -15
-Iteration 4: theta1 = 25
-Iteration 5: theta1 = -40
+Training WITHOUT normalization (learning_rate = 0.0000001):
+--------------------------------------------------
+Iter 0: theta0=           0.00, theta1=              58.29
+Iter 1: theta0=          -0.59, theta1=         -74,922.53
+Iter 2: theta0=         756.63, theta1=      96,375,580.03
+Iter 3: theta0=     -973275.22, theta1= -123,971,336,620.51
+Iter 4: theta0=  1251958534.85, theta1= 159,468,739,960,139.78
+Iter 5: theta0=-1610438795589.99, theta1= -205,130,312,519,816,704.00
 ...
-Iteration 20: theta1 = NaN (exploded to infinity)
+Eventually: theta0 = NaN, theta1 = NaN (exploded to infinity)
 ```
+
+Even with a **tiny** learning rate of 0.0000001, the values explode astronomically!
+
+**Why does this happen?**
+
+The gradient formula multiplies error by mileage:
+```
+tmpθ₁ = learning_rate × (1/m) × Σ(error × mileage)
+```
+
+With raw data:
+- Initial prediction = 0 (theta0=0, theta1=0)
+- Actual price ≈ 6,500
+- Error = 0 - 6,500 = -6,500
+- Mileage ≈ 100,000
+- error × mileage = -6,500 × 100,000 = **-650,000,000,000** (billions!)
+
+The gradient is astronomically large, causing wild oscillations that grow exponentially.
+
+### Can We Just Use a Smaller Learning Rate?
+
+You might think: "Just use a tinier learning rate!"
+
+| Learning Rate | Result |
+|---------------|--------|
+| 0.0000001 | Diverges (as shown above) |
+| 0.00000001 | Still diverges |
+| 0.000000001 | Still diverges |
+| 0.0000000000001 | Might work, but needs millions of iterations |
+
+**It's impractical.** Normalization is the standard solution.
 
 ### The Solution: Normalization
 
@@ -759,32 +794,99 @@ For a car with 100,000 km:
 normalized = (100,000 - 22,899) / 217,101 = 0.355
 ```
 
+**Example with price:**
+- Min price = 3,650
+- Max price = 8,290
+- Range = 8,290 - 3,650 = 4,640
+
+For a price of 6,500:
+```
+normalized = (6,500 - 3,650) / 4,640 = 0.614
+```
+
 **After normalization:**
 - All mileages are between 0 and 1
 - All prices are between 0 and 1
-- Gradients stay small and manageable
+- Gradients stay small (around 0.1 to 1.0)
 - Gradient descent works properly!
 
-### Denormalization
+### Denormalization - Converting Back to Real Values
 
-After training with normalized data, we get normalized theta values. We need to convert them back to work with real mileage and price values.
-
-**The math:**
+After training with normalized data, our theta values only work with normalized inputs:
 ```
-theta1_real = theta1_normalized × (price_range / mileage_range)
-theta0_real = theta0_normalized × price_range + min_price - theta1_real × min_mileage
+normalized_price = θ₀_norm + θ₁_norm × normalized_mileage
 ```
 
-This is done automatically in `train.py`.
+But `predict.py` uses **real** mileage (like 100,000 km), so we need to convert theta values back to real scale.
+
+**The Math Derivation:**
+
+Step 1 - Normalization formulas:
+```
+x_norm = (x - min_km) / km_range
+y_norm = (y - min_price) / price_range
+```
+
+Step 2 - Our trained model (works with normalized values):
+```
+y_norm = θ₀_norm + θ₁_norm × x_norm
+```
+
+Step 3 - Substitute the normalization formulas:
+```
+(y - min_price) / price_range = θ₀_norm + θ₁_norm × (x - min_km) / km_range
+```
+
+Step 4 - Solve for y (multiply both sides by price_range):
+```
+y - min_price = θ₀_norm × price_range + θ₁_norm × (price_range / km_range) × (x - min_km)
+```
+
+Step 5 - Expand and rearrange:
+```
+y = θ₀_norm × price_range + θ₁_norm × (price_range / km_range) × x
+    - θ₁_norm × (price_range / km_range) × min_km + min_price
+```
+
+Step 6 - Define real theta values:
+```
+θ₁_real = θ₁_norm × (price_range / km_range)
+θ₀_real = θ₀_norm × price_range + min_price - θ₁_real × min_km
+```
+
+Now we have: `y = θ₀_real + θ₁_real × x` (works with real mileage!)
+
+**The Code:**
+```python
+price_range = max_price - min_price
+km_range = max_km - min_km
+
+theta1_real = theta1 * price_range / km_range
+theta0_real = theta0 * price_range + min_price - theta1_real * min_km
+```
+
+**Example:**
+
+| Value | Normalized | Real |
+|-------|------------|------|
+| θ₀ | 0.94 | 8,481 |
+| θ₁ | -1.00 | -0.021 |
+| Input (mileage) | 0.355 | 100,000 km |
+| Output (price) | 0.614 | 6,354 |
+
+Both calculations give the same result - just in different scales!
 
 ### Summary
 
 | Without Normalization | With Normalization |
 |-----------------------|---------------------|
 | Mileage: 22,899 - 240,000 | Mileage: 0 - 1 |
-| Gradients: billions | Gradients: small decimals |
-| Result: DIVERGES | Result: Converges |
-| Learning rate needed: 0.0000000001 | Learning rate: 0.1 - 1.0 |
+| Price: 3,650 - 8,290 | Price: 0 - 1 |
+| Gradients: billions | Gradients: ~0.1 to 1.0 |
+| Result: **DIVERGES** | Result: **Converges** |
+| Learning rate: impossible to tune | Learning rate: 0.1 - 1.7 |
+
+**Normalization is not optional for this dataset - it's required for gradient descent to work.**
 
 ---
 
