@@ -502,202 +502,584 @@ theta1 = theta1 - tmp_theta1
 
 ## Gradient Descent Explained
 
-### The Concept
+### The Core Equations (Mathematical Foundation)
 
-**The problem:** We need to find the best theta0 and theta1, but there are infinite possibilities!
-
-**The solution:** Start somewhere and gradually improve.
-
-**Analogy - Finding the lowest point in a valley while blindfolded:**
-
-1. You're standing somewhere on a hilly landscape
-2. You can't see, but you can feel the slope under your feet
-3. You take a step in the direction that goes downhill
-4. Repeat until you can't go any lower
-5. You've found the valley (the minimum)!
-
-**In our case:**
-- The "landscape" is the cost function
-- The "height" is how wrong our predictions are
-- "Downhill" means reducing the error
-- The "valley" is where we have the best theta values
-
-### Visualizing Gradient Descent
-
-Imagine the cost as a bowl shape:
-
+**Equation 1: The Hypothesis (Prediction Function)**
 ```
-    Cost
-      ^
-      |    \       /
-      |     \     /
-      |      \   /
-      |       \_/  <- minimum (best theta values)
-      +-----------> theta
+h(x) = θ₀ + θ₁·x
 ```
 
-Gradient descent starts somewhere on the edge and rolls down to the bottom:
+**Equation 2: The Cost Function (Mean Squared Error)**
+```
+J(θ₀, θ₁) = (1/2m) × Σᵢ₌₁ᵐ (h(xᵢ) - yᵢ)²
+```
+
+Expanded form:
+```
+J(θ₀, θ₁) = (1/2m) × Σᵢ₌₁ᵐ (θ₀ + θ₁·xᵢ - yᵢ)²
+```
+
+**Equation 3: The Gradient (Partial Derivatives)**
+```
+∂J/∂θ₀ = (1/m) × Σᵢ₌₁ᵐ (h(xᵢ) - yᵢ)
+
+∂J/∂θ₁ = (1/m) × Σᵢ₌₁ᵐ (h(xᵢ) - yᵢ)·xᵢ
+```
+
+**Equation 4: The Update Rule**
+```
+θ₀ := θ₀ - α × ∂J/∂θ₀
+θ₁ := θ₁ - α × ∂J/∂θ₁
+```
+
+Or in vector notation:
+```
+θ := θ - α × ∇J(θ)
+```
+
+Where:
+| Symbol | Name | Mathematical Meaning |
+|--------|------|---------------------|
+| θ₀, θ₁ | Parameters | Values we optimize |
+| α | Learning rate | Step size, α ∈ (0, 2) |
+| J(θ) | Cost function | Objective to minimize |
+| ∇J(θ) | Gradient | Vector of partial derivatives |
+| m | Sample size | Number of training examples |
+| h(x) | Hypothesis | Our prediction function |
+| := | Assignment | Update the value |
+
+---
+
+### Deriving the Gradient (Step-by-Step Calculus)
+
+This section shows **exactly** how we derive the gradient formulas from the cost function.
+
+**Starting Point: The Cost Function**
+```
+J(θ₀, θ₁) = (1/2m) × Σᵢ₌₁ᵐ (θ₀ + θ₁·xᵢ - yᵢ)²
+```
+
+**Deriving ∂J/∂θ₀:**
+
+Using the chain rule: ∂/∂θ₀ of (something)² = 2·(something)·∂(something)/∂θ₀
 
 ```
-    Start here
+∂J/∂θ₀ = (1/2m) × Σᵢ₌₁ᵐ 2·(θ₀ + θ₁·xᵢ - yᵢ)·∂(θ₀ + θ₁·xᵢ - yᵢ)/∂θ₀
+```
+
+Since ∂(θ₀ + θ₁·xᵢ - yᵢ)/∂θ₀ = 1:
+```
+∂J/∂θ₀ = (1/2m) × Σᵢ₌₁ᵐ 2·(θ₀ + θ₁·xᵢ - yᵢ)·1
+       = (1/m) × Σᵢ₌₁ᵐ (θ₀ + θ₁·xᵢ - yᵢ)
+       = (1/m) × Σᵢ₌₁ᵐ (h(xᵢ) - yᵢ)
+       = (1/m) × Σᵢ₌₁ᵐ errorᵢ
+```
+
+**Deriving ∂J/∂θ₁:**
+
+```
+∂J/∂θ₁ = (1/2m) × Σᵢ₌₁ᵐ 2·(θ₀ + θ₁·xᵢ - yᵢ)·∂(θ₀ + θ₁·xᵢ - yᵢ)/∂θ₁
+```
+
+Since ∂(θ₀ + θ₁·xᵢ - yᵢ)/∂θ₁ = xᵢ:
+```
+∂J/∂θ₁ = (1/2m) × Σᵢ₌₁ᵐ 2·(θ₀ + θ₁·xᵢ - yᵢ)·xᵢ
+       = (1/m) × Σᵢ₌₁ᵐ (θ₀ + θ₁·xᵢ - yᵢ)·xᵢ
+       = (1/m) × Σᵢ₌₁ᵐ (h(xᵢ) - yᵢ)·xᵢ
+       = (1/m) × Σᵢ₌₁ᵐ errorᵢ·xᵢ
+```
+
+**Summary of Derivation:**
+```
+∂J/∂θ₀ = (1/m) × Σ(error)           ← average error
+∂J/∂θ₁ = (1/m) × Σ(error × x)       ← weighted average error
+```
+
+**The Gradient Vector:**
+```
+∇J(θ) = [ ∂J/∂θ₀ ]  =  [ (1/m) × Σ(h(x) - y)     ]
+        [ ∂J/∂θ₁ ]     [ (1/m) × Σ(h(x) - y)·x   ]
+```
+
+---
+
+### The Algorithm (Implementation)
+
+**The gradient descent update rule:**
+
+```
+repeat until converged:
+    θ₀ := θ₀ - α × (1/m) × Σ(h(xᵢ) - yᵢ)
+    θ₁ := θ₁ - α × (1/m) × Σ(h(xᵢ) - yᵢ)·xᵢ
+```
+
+Or in compact notation:
+```
+θ := θ - α × ∇J(θ)
+```
+
+**In Python:**
+```python
+for i in range(iterations):
+    # Calculate gradients (partial derivatives)
+    gradient_theta0 = (1/m) * sum(predictions - actuals)
+    gradient_theta1 = (1/m) * sum((predictions - actuals) * mileages)
+
+    # Update parameters (NOTE: subtract, not add!)
+    theta0 = theta0 - learning_rate * gradient_theta0
+    theta1 = theta1 - learning_rate * gradient_theta1
+```
+
+---
+
+### What is Gradient Descent?
+
+**The problem:** We need to find the best θ₀ and θ₁, but there are infinite possibilities!
+
+**The solution:** Start with a guess and improve it step by step.
+
+**Simple analogy - Finding the lowest point while blindfolded:**
+
+```
+Imagine you're on a hilly landscape, blindfolded:
+
+    You are here
          ↓
          *
-          \
-           \
-            *
-             \
-              *  <- End here (converged)
+        /|\
+       / | \      1. Feel the slope under your feet
+      /  |  \     2. Take a step DOWNHILL
+     /   ↓   \    3. Repeat until flat (can't go lower)
+    /    *    \   4. You found the bottom!
+   /    / \    \
+  /    /   \    \
+ /____/_____\____\
+      ↑
+   Bottom (minimum)
 ```
 
-### Why Do We Subtract? (The Math Behind the Minus Sign)
+**In our case:**
+| Analogy | Linear Regression |
+|---------|-------------------|
+| Landscape | Cost function J(θ) |
+| Your position | Current θ₀, θ₁ values |
+| Height | How wrong predictions are (cost) |
+| Slope/steepness | The gradient |
+| Bottom of valley | Best θ₀, θ₁ (minimum cost) |
 
-In the update rule, we **subtract** the gradient:
+---
+
+### Mathematical Properties of the Cost Function
+
+**Why Gradient Descent Works: Convexity**
+
+The MSE cost function is **convex**, which means:
+1. It has exactly ONE minimum (no local minima traps)
+2. Gradient descent is guaranteed to find it
+3. Any downhill direction leads to the minimum
+
+**Mathematical Definition of Convexity:**
+
+A function J(θ) is convex if for any two points θ₁ and θ₂:
+```
+J(t·θ₁ + (1-t)·θ₂) ≤ t·J(θ₁) + (1-t)·J(θ₂)   for all t ∈ [0,1]
+```
+
+**Proving MSE is Convex:**
+
+The MSE cost function:
+```
+J(θ) = (1/2m) × Σᵢ(θ₀ + θ₁·xᵢ - yᵢ)²
+```
+
+The Hessian (second derivative matrix) is:
+```
+H = ∇²J = (1/m) × [ m      Σxᵢ   ]
+                  [ Σxᵢ    Σxᵢ²  ]
+```
+
+A function is convex if its Hessian is positive semi-definite (all eigenvalues ≥ 0).
+
+For MSE, the Hessian is always positive semi-definite, therefore:
+- **MSE is convex**
+- Gradient descent will always converge to the global minimum
+- There are no local minima to get trapped in
+
+**Visual Consequence:**
 
 ```
-θ = θ - learning_rate × gradient
+Non-convex (bad):           Convex (MSE - good):
+
+   /\      /\                     \      /
+  /  \    /  \                     \    /
+ /    \  /    \                     \  /
+/      \/      \                     \/
+    ↑                                ↑
+Local minima exist!           Only ONE minimum!
+Might get stuck              Always find best θ
 ```
 
-**Why minus and not plus?** This comes from calculus and optimization theory.
+### Visualizing the Cost Function
 
-#### The Gradient Points Uphill
-
-From calculus, there's a theorem:
+The cost function looks like a bowl. We want to find the bottom:
 
 ```
-∇J(θ) = direction of steepest INCREASE of J at point θ
+    Cost J(θ)
+      ^
+      |    \         /
+      |     \       /
+      |      \     /
+      |       \   /
+      |        \_/  ← minimum (best theta)
+      |
+      +---------------→ θ
+
+Gradient descent "rolls" down to the bottom:
+
+      Start (random guess)
+           ↓
+           *
+            \
+             \  ← step 1
+              *
+               \
+                \  ← step 2
+                 *
+                  \
+                   * ← converged (done!)
 ```
 
-The gradient always points toward where the function **increases** the most.
+---
+
+### Why Subtract? (The Minus Sign Explained)
+
+You might wonder: **why `θ = θ - gradient` and not `θ = θ + gradient`?**
+
+#### Reason 1: The Gradient Points UPHILL
+
+From calculus:
+```
+Gradient = direction of steepest INCREASE
+```
+
+But we want to DECREASE cost (go downhill), so we go the OPPOSITE direction:
+```
+-Gradient = direction of steepest DECREASE
+```
 
 **Visual:**
 ```
 Cost J(θ)
     ^
     |        * ← you are here
-    |       /|
-    |      / |
-    |     /  ↑ gradient points UP (toward higher cost)
-    |    /   |
+    |       /
+    |      /  ↑ gradient points UP (increasing cost)
+    |     /   |
+    |    /
     |   /
     +--+--------→ θ
+
+To go DOWN (decrease cost), go OPPOSITE of gradient → SUBTRACT
 ```
 
-#### To Minimize, Go Opposite
+#### Reason 2: Mathematical Proof (Taylor Series)
 
-Since gradient points **uphill** (increasing cost), to **minimize** cost we must go **downhill** (opposite direction):
+**First-Order Taylor Expansion:**
 
+For a small step d from current position θ:
 ```
--∇J(θ) = direction of steepest DECREASE of J
-```
-
-Therefore, the update rule is:
-```
-θ_new = θ_old - α × ∇J(θ)
-        ↑
-        minus sign = go opposite of gradient = go downhill
+J(θ + d) ≈ J(θ) + ∇J(θ)ᵀ · d
 ```
 
-#### Mathematical Proof (Taylor Series)
+Where:
+- J(θ + d) = cost at new position
+- J(θ) = cost at current position
+- ∇J(θ)ᵀ · d = dot product (directional derivative)
 
-For those who want the rigorous derivation:
+**Finding the Optimal Direction:**
 
-We want to find direction `d` that decreases J(θ) the most.
-
-**Step 1:** Taylor series expansion:
+We want to find d that **minimizes** J(θ + d):
 ```
-J(θ + d) ≈ J(θ) + ∇J(θ)ᵀ × d
-```
-
-**Step 2:** To minimize J(θ + d), we need `∇J(θ)ᵀ × d` to be as **negative** as possible.
-
-**Step 3:** The dot product `∇J(θ)ᵀ × d` is most negative when `d` points in the **opposite** direction of `∇J(θ)`:
-```
-d = -α × ∇J(θ)    (where α > 0)
+J(θ + d) = J(θ) + ∇J(θ)ᵀ · d
 ```
 
-**Step 4:** Therefore:
+Since J(θ) is constant, we need to minimize ∇J(θ)ᵀ · d.
+
+**The Dot Product Analysis:**
 ```
-θ_new = θ_old + d = θ_old - α × ∇J(θ)
-```
-
-The minus sign is mathematically derived, not arbitrary!
-
-#### Practical Example
-
-```
-Case 1: Gradient is positive (+0.5)
-   - Means: "increasing θ will increase cost"
-   - To decrease cost → decrease θ
-   - θ = θ - (+0.5) = θ - 0.5 ✓ (θ decreases)
-
-Case 2: Gradient is negative (-0.5)
-   - Means: "increasing θ will decrease cost"
-   - To decrease cost → increase θ
-   - θ = θ - (-0.5) = θ + 0.5 ✓ (θ increases)
+∇J(θ)ᵀ · d = |∇J(θ)| × |d| × cos(angle)
 ```
 
-The minus sign automatically handles both cases correctly!
+This is minimized when cos(angle) = -1, which means angle = 180°.
 
-#### Summary: Why Subtract?
+**Conclusion:**
+```
+d should point in the OPPOSITE direction of ∇J(θ)
 
-| Concept | Explanation |
-|---------|-------------|
-| Gradient direction | Points toward steepest **increase** |
-| Our goal | **Minimize** cost (decrease it) |
-| Solution | Go **opposite** of gradient |
-| Math operation | **Subtract** the gradient |
-| Name origin | "Gradient **Descent**" = descending by subtracting gradient |
+Therefore: d = -α × ∇J(θ)   (where α > 0 controls step size)
+
+Final update rule: θ_new = θ_old + d = θ_old - α × ∇J(θ)
+```
+
+**The minus sign is mathematically derived, not arbitrary!**
+
+#### Reason 3: Formal Derivation
+
+**Goal:** Show that J(θ - α∇J) < J(θ) for small α > 0
+
+**Proof:**
+```
+Let d = -α × ∇J(θ)
+
+J(θ + d) ≈ J(θ) + ∇J(θ)ᵀ · d
+         = J(θ) + ∇J(θ)ᵀ · (-α × ∇J(θ))
+         = J(θ) - α × ∇J(θ)ᵀ · ∇J(θ)
+         = J(θ) - α × ||∇J(θ)||²
+```
+
+Since ||∇J(θ)||² ≥ 0 and α > 0:
+```
+J(θ + d) = J(θ) - α × ||∇J(θ)||² ≤ J(θ)
+```
+
+**The cost decreases (or stays same if gradient = 0)!**
+
+This proves:
+- Subtracting gradient always decreases cost (if gradient ≠ 0)
+- The decrease is proportional to α × ||∇J||²
+- Larger gradient = larger decrease
+
+#### Reason 3: Practical Examples
+
+```
+Example 1: Gradient = +0.5 (slope going up)
+   θ = θ - (+0.5)
+   θ = θ - 0.5     → θ decreases → moves LEFT → cost decreases ✓
+
+Example 2: Gradient = -0.5 (slope going down)
+   θ = θ - (-0.5)
+   θ = θ + 0.5     → θ increases → moves RIGHT → cost decreases ✓
+```
+
+The minus sign automatically handles both directions!
+
+#### Summary: Why Subtract
+
+| Question | Answer |
+|----------|--------|
+| What does gradient tell us? | Direction of steepest **increase** |
+| What do we want? | To **decrease** cost |
+| How to decrease? | Go **opposite** of gradient |
+| Math operation? | **Subtract** the gradient |
+| Why called "descent"? | We **descend** (go down) by subtracting |
 
 ```python
-# This is why the code uses minus:
-theta0 -= tmp_theta0  # equivalent to: theta0 = theta0 - tmp_theta0
-theta1 -= tmp_theta1  # equivalent to: theta1 = theta1 - tmp_theta1
+# This is why the code uses -= (minus equals):
+theta0 -= learning_rate * gradient0  # subtract to go downhill
+theta1 -= learning_rate * gradient1  # subtract to go downhill
 ```
 
-### Step-by-Step Example
+---
 
-Let's trace through the first few iterations:
+### Step-by-Step Walkthrough
 
-**Initial state:**
-- theta0 = 0
-- theta1 = 0
-- Predictions are all 0 (very wrong!)
+Let's trace through gradient descent with actual numbers:
+
+**Setup:**
+- Start with θ₀ = 0, θ₁ = 0
+- Learning rate α = 0.1
+- Data: normalized mileages and prices (0 to 1)
+
+**Iteration 0 (Starting point):**
+```
+θ₀ = 0, θ₁ = 0
+Prediction for any car: price = 0 + 0 × mileage = 0
+Actual prices: around 0.5 to 1.0
+Error: We're predicting WAY too low!
+Gradient: Large negative (need to increase θ₀)
+```
 
 **Iteration 1:**
-- Predictions: all 0
-- Actual prices: around 6,000-8,000
-- Errors: all negative (we're predicting too low)
-- Adjustment: increase theta0 significantly
+```
+gradient_θ₀ = -0.5 (negative = θ₀ too small)
+gradient_θ₁ = -0.2
+
+θ₀ = 0 - 0.1 × (-0.5) = 0 + 0.05 = 0.05  ← increased!
+θ₁ = 0 - 0.1 × (-0.2) = 0 + 0.02 = 0.02  ← increased!
+```
 
 **Iteration 10:**
-- theta0 ≈ 0.3
-- theta1 ≈ 0.05
-- Still not great, but better
+```
+θ₀ ≈ 0.3
+θ₁ ≈ 0.05
+Predictions getting better, but still off
+Gradients smaller now
+```
 
 **Iteration 100:**
-- theta0 ≈ 0.6
-- theta1 ≈ -0.3
-- Getting closer!
+```
+θ₀ ≈ 0.6
+θ₁ ≈ -0.3
+Getting close!
+θ₁ is now negative (correct - more mileage = lower price)
+```
 
 **Iteration 500:**
-- theta0 ≈ 0.85
-- theta1 ≈ -0.89
-- Almost there
+```
+θ₀ ≈ 0.85
+θ₁ ≈ -0.89
+Almost there
+Gradients very small
+```
 
 **Iteration 1000:**
-- theta0 ≈ 0.87
-- theta1 ≈ -0.95
-- Converged! Changes are now tiny.
+```
+θ₀ ≈ 0.87
+θ₁ ≈ -0.95
+CONVERGED!
+Gradients ≈ 0 (can't improve anymore)
+```
 
-**The Process Table:**
+**Progress Table:**
 
-| Iteration | θ₀ | θ₁ | Adjustment Size | Status |
-|-----------|-------|--------|-----------------|--------|
-| 0 | 0 | 0 | - | Starting |
-| 10 | 0.3 | 0.05 | Large | Way off |
-| 100 | 0.6 | -0.3 | Medium | Getting better |
-| 500 | 0.85 | -0.89 | Small | Almost there |
-| 1000 | 0.87 | -0.95 | Tiny | Converged |
+| Iteration | θ₀ | θ₁ | Gradient Size | Status |
+|-----------|------|-------|---------------|--------|
+| 0 | 0 | 0 | Large | Starting |
+| 1 | 0.05 | 0.02 | Large | Just started |
+| 10 | 0.3 | 0.05 | Medium | Learning |
+| 100 | 0.6 | -0.3 | Small | Getting close |
+| 500 | 0.85 | -0.89 | Very small | Almost there |
+| 1000 | 0.87 | -0.95 | ≈ 0 | **Converged!** |
+
+---
+
+### The Complete Algorithm
+
+```python
+def gradient_descent(X, y, learning_rate, iterations):
+    theta0 = 0  # Start with initial guess
+    theta1 = 0
+    m = len(X)  # Number of samples
+
+    for i in range(iterations):
+        # Step 1: Make predictions with current theta
+        predictions = theta0 + theta1 * X
+
+        # Step 2: Calculate errors
+        errors = predictions - y
+
+        # Step 3: Calculate gradients (partial derivatives)
+        gradient0 = (1/m) * sum(errors)
+        gradient1 = (1/m) * sum(errors * X)
+
+        # Step 4: Update theta (SUBTRACT gradient!)
+        theta0 = theta0 - learning_rate * gradient0
+        theta1 = theta1 - learning_rate * gradient1
+
+        # Step 5: Check if converged (gradients ≈ 0)
+        if abs(gradient0) < 0.0001 and abs(gradient1) < 0.0001:
+            print(f"Converged at iteration {i}")
+            break
+
+    return theta0, theta1
+```
+
+---
+
+### Quick Reference
+
+| Term | Symbol | Meaning |
+|------|--------|---------|
+| Parameters | θ₀, θ₁ | What we're finding (intercept, slope) |
+| Learning rate | α | Step size (typically 0.01 to 1.0) |
+| Gradient | ∇J | Direction of steepest increase |
+| Cost | J(θ) | How wrong our predictions are |
+| Converged | - | Gradients ≈ 0, can't improve |
+
+**The key insight:** Gradient descent finds the minimum by repeatedly taking steps in the **opposite** direction of the gradient (subtracting)
+
+---
+
+### Mathematical Summary (All Equations)
+
+This is a complete reference of all equations used in linear regression with gradient descent:
+
+**1. The Model (Hypothesis):**
+```
+h(x) = θ₀ + θ₁·x
+```
+
+**2. Cost Function (Mean Squared Error):**
+```
+J(θ₀, θ₁) = (1/2m) × Σᵢ₌₁ᵐ (h(xᵢ) - yᵢ)²
+          = (1/2m) × Σᵢ₌₁ᵐ (θ₀ + θ₁·xᵢ - yᵢ)²
+```
+
+**3. Gradient (Partial Derivatives):**
+```
+∂J/∂θ₀ = (1/m) × Σᵢ₌₁ᵐ (h(xᵢ) - yᵢ)
+
+∂J/∂θ₁ = (1/m) × Σᵢ₌₁ᵐ (h(xᵢ) - yᵢ)·xᵢ
+```
+
+**4. Gradient Vector:**
+```
+∇J(θ) = [ ∂J/∂θ₀ ]
+        [ ∂J/∂θ₁ ]
+```
+
+**5. Update Rule:**
+```
+θ₀ := θ₀ - α · ∂J/∂θ₀
+θ₁ := θ₁ - α · ∂J/∂θ₁
+```
+
+Or in vector form:
+```
+θ := θ - α · ∇J(θ)
+```
+
+**6. Normalization:**
+```
+x_norm = (x - x_min) / (x_max - x_min)
+y_norm = (y - y_min) / (y_max - y_min)
+```
+
+**7. Denormalization (converting θ back to real scale):**
+```
+θ₁_real = θ₁_norm × (price_range / km_range)
+θ₀_real = θ₀_norm × price_range + min_price - θ₁_real × min_km
+```
+
+**8. Convergence Condition:**
+```
+0 < α < 2/λ_max    (where λ_max = largest eigenvalue of Hessian)
+
+For normalized data: 0 < α < 2
+```
+
+**9. Cost Decrease Guarantee:**
+```
+J(θ - α∇J) ≈ J(θ) - α × ||∇J||²  ≤  J(θ)
+```
+
+**10. The Complete Algorithm:**
+```
+Initialize: θ₀ = 0, θ₁ = 0
+Normalize: x, y → x_norm, y_norm
+
+For i = 1 to iterations:
+    For j = 1 to m:
+        errorⱼ = (θ₀ + θ₁·x_norm[j]) - y_norm[j]
+
+    gradient₀ = (1/m) × Σⱼ errorⱼ
+    gradient₁ = (1/m) × Σⱼ errorⱼ · x_norm[j]
+
+    θ₀ := θ₀ - α × gradient₀
+    θ₁ := θ₁ - α × gradient₁
+
+Denormalize: θ₀_norm, θ₁_norm → θ₀_real, θ₁_real
+```
 
 ---
 
@@ -716,17 +1098,65 @@ Let's trace through the first few iterations:
 For normalized data (scaled to 0-1):
 
 ```
-0 < learning_rate < 2
+0 < α < 2
 ```
 
-| Learning Rate | Behavior |
-|---------------|----------|
+| Learning Rate (α) | Behavior |
+|-------------------|----------|
 | 0 | No movement (stuck forever) |
 | 0.01 - 0.1 | Very safe, but slow |
 | 0.1 - 0.5 | Safe and reasonably fast |
 | 0.5 - 1.0 | Fast, still stable |
 | 1.0 - 1.9 | Very fast, getting risky |
 | ≥ 2.0 | **DIVERGES** (explodes!) |
+
+### Mathematical Reason for the 0 < α < 2 Bound
+
+**The Convergence Condition:**
+
+For gradient descent to converge on a quadratic cost function (like MSE), the learning rate must satisfy:
+```
+0 < α < 2/λ_max
+```
+
+Where λ_max is the largest eigenvalue of the Hessian matrix H = ∇²J(θ).
+
+**For Normalized Data:**
+
+When data is normalized to [0, 1], the Hessian has eigenvalues close to 1:
+```
+λ_max ≈ 1
+
+Therefore: 0 < α < 2/1 = 2
+```
+
+**Why This Bound Exists (Mathematical Intuition):**
+
+Consider a 1D quadratic: J(θ) = (1/2)·λ·θ²
+
+The gradient is: ∇J = λ·θ
+
+The update rule: θ_new = θ - α·λ·θ = θ(1 - αλ)
+
+For convergence, we need |1 - αλ| < 1:
+```
+-1 < 1 - αλ < 1
+-2 < -αλ < 0
+0 < αλ < 2
+0 < α < 2/λ
+```
+
+**At the boundary (α = 2/λ):**
+```
+θ_new = θ(1 - 2) = -θ
+```
+The value flips sign each iteration but never converges!
+
+**Beyond the boundary (α > 2/λ):**
+```
+|1 - αλ| > 1
+θ grows exponentially → DIVERGENCE
+```
 
 ### Why Does lr ≥ 2 Diverge?
 
@@ -947,19 +1377,39 @@ Step 4 - Solve for y (multiply both sides by price_range):
 y - min_price = θ₀_norm × price_range + θ₁_norm × (price_range / km_range) × (x - min_km)
 ```
 
-Step 5 - Expand and rearrange:
+Step 5 - Expand (x - min_km) and add min_price to both sides:
 ```
 y = θ₀_norm × price_range + θ₁_norm × (price_range / km_range) × x
     - θ₁_norm × (price_range / km_range) × min_km + min_price
 ```
 
-Step 6 - Define real theta values:
+Step 6 - Group terms to match the form y = θ₀_real + θ₁_real × x:
+
+We want: `y = [something] + [something] × x`
+
+Looking at Step 5, identify the coefficient of x and the constant terms:
+```
+y = [θ₁_norm × (price_range / km_range)] × x      ← this is θ₁_real
+    + [θ₀_norm × price_range - θ₁_norm × (price_range / km_range) × min_km + min_price]
+                                                   ↑ this is θ₀_real
+```
+
+So we define:
 ```
 θ₁_real = θ₁_norm × (price_range / km_range)
+```
+
+And for θ₀_real, substitute θ₁_real into the constant terms:
+```
+θ₀_real = θ₀_norm × price_range - θ₁_real × min_km + min_price
+```
+
+Rearranged:
+```
 θ₀_real = θ₀_norm × price_range + min_price - θ₁_real × min_km
 ```
 
-Now we have: `y = θ₀_real + θ₁_real × x` (works with real mileage!)
+**Final Result:** `y = θ₀_real + θ₁_real × x` (works with real mileage!)
 
 **The Code:**
 ```python
