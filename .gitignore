@@ -1,7 +1,7 @@
 .claude
 __py*
 *.pyc
-*.csv
 *.json
+*.csv
+venv/
 theta.csv
-data.csv
